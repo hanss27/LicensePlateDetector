@@ -7,7 +7,7 @@ import functools
 from pathlib import Path
 import os
 
-def connected(image):
+def connected(image, showSteps=False):
         image = cv2.imread(image)
         image = imutils.resize(image, height=250, width=400 )
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -16,8 +16,7 @@ def connected(image):
         blurred = cv2.GaussianBlur(gray, (5, 5), 0)
         thresh = cv2.adaptiveThreshold(blurred, 255,
         cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY_INV, 45, 15)
-        cv2.imshow("thresh", thresh)
-        cv2.imshow("gray", gray)
+        
         _, labels = cv2.connectedComponents(thresh)
 
 
@@ -43,7 +42,10 @@ def connected(image):
                 # add it to our mask
                 if numPixels > lower and numPixels < upper:
                         mask = cv2.add(mask, labelMask)
-        cv2.imshow("mask",mask)
+        if showSteps == True:
+                cv2.imshow("thresh", thresh)
+                cv2.imshow("gray", gray)
+                cv2.imshow("mask",mask)
 
         # Find contours and get bounding box for each contour
         cnts, _ = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -84,9 +86,9 @@ def crop(charpic):
                 pic_format = "test"+str(i)+".jpg" 
                 cv2.imwrite(os.path.join(path, pic_format), pic)
                 i+=1
-def detect_plate(imag):
+def detect_plate(imag, showSteps = False):
         image = cv2.imread(imag)
-        #image = cv2.imread("plat2.jpg")
+       
         image = imutils.resize(image, width=300)
 
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -94,20 +96,15 @@ def detect_plate(imag):
         gray = cv2.GaussianBlur(gray,(5,5),0)
         gray = cv2.bilateralFilter(gray, 11, 17, 17) 
 
-        #cv2.imshow("gray", gray)
         edged = cv2.Canny(gray, 30, 200) 
-        #cv2.imshow("edged image", edged)
-
         cnts,new = cv2.findContours(edged.copy(), cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
         image1=image.copy()
         cv2.drawContours(image1,cnts,-1,(0,255,0),3)
-        #cv2.imshow("contours",image1)
 
-        cnts = sorted(cnts, key = cv2.contourArea, reverse = True) [:30]
+        cnts = sorted(cnts, key = cv2.contourArea, reverse = True) [:60]
         screenCnt = None
         image2 = image.copy()
         cv2.drawContours(image2,cnts,-1,(0,255,0),3)
-        #cv2.imshow("Top 30 contours",image2)
 
         i=1
         for c in cnts:
@@ -120,17 +117,26 @@ def detect_plate(imag):
                         cv2.imwrite('./'+str(i)+'.jpg',new_img)
                         i+=1
                         break
+        if showSteps == True:
+                cv2.imshow("Original Image", image)
+                cv2.imshow("B&W Image", gray)
+                cv2.imshow("Canny Image", edged)
+                cv2.imshow("Contours",image1)
+                cv2.imshow("Top 30 contours",image2)
+        if screenCnt is not None:
+                cv2.drawContours(image, [screenCnt], -1, (0, 255, 0), 3)
+                cv2.imshow("image with detected license plate", image)
+                return i-1
 
-        cv2.drawContours(image, [screenCnt], -1, (0, 255, 0), 3)
-        cv2.imshow("image with detected license plate", image)
-        return i-1
-
+        else:
+                print("Image not detected")
+                return -1
 
 def main():
-        a = detect_plate("plat2.jpg")
-        a = str(a) + ".jpg"
-        
-        mask = connected(a)
+        a = detect_plate("plat2.jpg", showSteps=True)
+        if a is not -1:
+                a = str(a) + ".jpg"
+                mask = connected(a, showSteps=False)
 
         cv2.waitKey(0)
 if __name__=="__main__":
