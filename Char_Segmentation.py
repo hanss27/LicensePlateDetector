@@ -123,17 +123,18 @@ def detect_plate(imag, showSteps = False):
                 cv2.imshow("Canny Image", edged)
                 cv2.imshow("Contours",image1)
                 cv2.imshow("Top 30 contours",image2)
+
         if screenCnt is not None:
                 cv2.drawContours(image, [screenCnt], -1, (0, 255, 0), 3)
                 cv2.imshow("image with detected license plate", image)
                 return i-1
-
         else:
                 print("Image not detected")
                 return -1
 
 def main():
-        a = detect_plate("plat2.jpg", showSteps=True)
+        path = os.path.join(Path().absolute(), "src_img") # Directory of current working directory, not __file__ 
+        a = detect_plate(os.path.join(path,"test_img.jpg"), showSteps=True)
         if a is not -1:
                 a = str(a) + ".jpg"
                 mask = connected(a, showSteps=False)

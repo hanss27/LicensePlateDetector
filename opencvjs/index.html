@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>OpenCV.js</title>
+    <style>
+    /* display loading gif and hide webpage */
+    .modal {
+        display:    none;
+        position:   fixed;
+        z-index:    1000;
+        top:        0;
+        left:       0;
+        height:     100%;
+        width:      100%;
+        background: rgba( 255, 255, 255, .8) 
+                    url('http://i.stack.imgur.com/FhHRx.gif') 
+                    50% 50% 
+                    no-repeat;
+    }
+
+    /* prevent scrollbar from display during load */
+    body.loading {
+        overflow: hidden;   
+    }
+
+    /* display the modal when loading class is added to body */
+    body.loading .modal {
+        display: block;
+    } 
+    </style>
+  
+</head>
+<body>
+    <input type="file" id="fileInput" name="file" />
+    <img id="imageSrc" alt="No Image" />
+    <canvas id="imageCanvas"></canvas>
+    <button type="button" id="startOpenCV" class="btn btn-primary">OpenCV Start</button>
+  <!-- Our HTML will go here-->
+  <div class="modal">
+  </div>
+
+  <script type="text/javascript">
+    // Using Open CV JS "https://docs.opencv.org/3.3.1/opencv.js"
+
+    document.body.classList.add('loading');
+      
+    function onOpenCvReady() {
+    document.body.classList.remove('loading');
+    }
+    
+    let imgElement = document.getElementById('imageSrc');
+    let inputElement = document.getElementById('fileInput');
+    inputElement.onchange = function() {
+    imgElement.src = URL.createObjectURL(event.target.files[0]);
+    };  
+    imgElement.onload = function() {
+    let image = cv.imread(imgElement);
+    cv.imshow('imageCanvas', image);
+    image.delete();
+    document.getElementById('startOpenCV').onclick = function() {
+    // circle detection code
+    };
+
+    document.getElementById('startOpenCV').onclick = function() {
+    this.disabled = true;
+    document.body.classList.add('loading');
+
+  // circle detection code
+    let srcMat = cv.imread('imageCanvas');
+    let displayMat = srcMat.clone();
+    let circlesMat = new cv.Mat();
+    let labels;
+    cv.cvtColor(srcMat, srcMat, cv.COLOR_BGR2GRAY);
+    cv.BackgroundSubtractorMOG
+    cv.bitwise_not(srcMat, srcMat)
+
+ 
+    cv.adaptiveThreshold(srcMat, srcMat, 255,
+	cv.ADAPTIVE_THRESH_MEAN_C, cv.THRESH_BINARY_INV, 45, 9)
+    let M = cv.Mat.ones(3, 3, cv.CV_8U);
+    let anchor = new cv.Point(-1, -1);
+    cv.dilate(srcMat, srcMat, M, anchor, 1,
+                cv.BORDER_CONSTANT, cv.morphologyDefaultBorderValue());
+    cv.imshow('imageCanvas', srcMat);
+
+    srcMat.delete();
+    displayMat.delete();
+    circlesMat.delete();
+
+    this.disabled = false;
+    document.body.classList.remove('loading');
+        
+};
+    
+    };
+  </script>
+  <script async src="opencv.js" onload="onOpenCvReady();" type="text/javascript">
+  </script>
+  
+
+</body>
+</html>
