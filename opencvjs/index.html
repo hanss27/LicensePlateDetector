@@ -67,21 +67,32 @@
 
   // circle detection code
     let srcMat = cv.imread('imageCanvas');
+    let size = srcMat.size();
+    size.height = 130
+    size.width = 300
+    cv.resize(srcMat,srcMat,size)
+    delete size;
     let displayMat = srcMat.clone();
     let circlesMat = new cv.Mat();
-    let labels;
     cv.cvtColor(srcMat, srcMat, cv.COLOR_BGR2GRAY);
     cv.BackgroundSubtractorMOG
     cv.bitwise_not(srcMat, srcMat)
 
  
     cv.adaptiveThreshold(srcMat, srcMat, 255,
-	cv.ADAPTIVE_THRESH_MEAN_C, cv.THRESH_BINARY_INV, 45, 9)
+	cv.ADAPTIVE_THRESH_MEAN_C, cv.THRESH_BINARY_INV, 43, 9)
     let M = cv.Mat.ones(3, 3, cv.CV_8U);
     let anchor = new cv.Point(-1, -1);
+    cv.erode(srcMat, srcMat, M, anchor, 1,
+               cv.BORDER_CONSTANT, cv.morphologyDefaultBorderValue());
     cv.dilate(srcMat, srcMat, M, anchor, 1,
-                cv.BORDER_CONSTANT, cv.morphologyDefaultBorderValue());
+               cv.BORDER_CONSTANT, cv.morphologyDefaultBorderValue());
     cv.imshow('imageCanvas', srcMat);
+    let cclabels = new cv.Mat();
+    let stats = new cv.Mat();
+    let centroids = new cv.Mat();
+    let labels = cv.connectedComponentsWithStats(srcMat, cclabels, stats, centroids, 4);
+    console.log(stats)
 
     srcMat.delete();
     displayMat.delete();
