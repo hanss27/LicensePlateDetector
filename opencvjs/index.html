@@ -54,19 +54,24 @@
     imgElement.src = URL.createObjectURL(event.target.files[0]);
     };  
     imgElement.onload = function() {
+      
     let image = cv.imread(imgElement);
     cv.imshow('imageCanvas', image);
     image.delete();
     document.getElementById('startOpenCV').onclick = function() {
-    // circle detection code
+    
     };
 
     document.getElementById('startOpenCV').onclick = function() {
     this.disabled = true;
     document.body.classList.add('loading');
 
-  // circle detection code
-    let srcMat = cv.imread('imageCanvas');
+  
+   
+  // img_array = ... (ARRAY PASSING DARI LU YA CEL BISA DITARO DISINI) 
+   //let srcMat = cv.matFromArray(img_array.length, img_array[0].length, cv.CV_8UC3, [].concat(...img_array));
+
+    let srcMat = cv.imread('imageCanvas'); // KLO UDAH INI BISA DICOMMENT DISINI
 
     let size =  srcMat.size();
     size.height = 130
@@ -109,9 +114,8 @@
            let b = row
             if (markers.ucharPtr(a,b)[0] == testing){
               mask_temp.ucharPtr(a,b)[0] = 255;
-
               if (a <= 10 || a >= 100 || b <= 10 || b >= 280) near_border = 1;
-            } 
+          } 
         }   
       }
       if (near_border == 1) continue;
@@ -120,42 +124,76 @@
              cv.add(mask_temp, mask, mask);
    }
     cv.imshow('imageCanvas', mask);
-    let size =  srcMat.size();
-    size.height = 130
-    size.width = 300
+    
     let contours = new cv.MatVector();
     let hierarchy = new cv.Mat();
+    
+
     cv.findContours(mask.clone(), contours, hierarchy, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE);
     let minContourArea = 30;
     let color = new cv.Scalar(0, 255,0);
+    let char = new cv.Mat();
+    let rect = cv.boundingRect(contours.get(0));
+    let a = rect.x-2
+    let array = [{cntr_idx:0, cntr_start_pos:a}];
+    // sort
+    for (let i = 1 ; i < contours.size(); ++i){
+      let rect = cv.boundingRect(contours.get(i));
+      let pos_x = rect.x-2;
+      array.push({cntr_idx:i, cntr_start_pos:pos_x})
+    }
+    array.sort(function(a, b){return a.cntr_start_pos - b.cntr_start_pos});
+
+    let output_array = [];
     for (let i = 0; i < contours.size() ;  ++i){
-      let cnt = contours.get(i);
-      let char = new cv.Mat()
+      output_array = []
+      let cntr_size =  blackMat.size();
+      char = blackMat.clone();
+      let cnt = contours.get(array[i].cntr_idx);
       let rect = cv.boundingRect(cnt);
-      console.log(cnt)
-      //let contoursColor = new cv.Scalar(255, 255, 255);
-      let rectangleColor = new cv.Scalar(255, 0, 0);
+      let rectangleColor = new cv.Scalar(0, 0, 0);
       cv.drawContours(mask, contours, i, color, 1, 8, hierarchy, 1);
       let pos_x = rect.x-2;
       let pos_y = rect.y-2;
       let point1 = new cv.Point(pos_x, pos_y);
       let point2 = new cv.Point(rect.x + rect.width+2, rect.y + rect.height+2);
+      cntr_size.height = rect.height+4
+      cntr_size.width = rect.width+4
+      cv.resize(char,char,cntr_size);
       cv.rectangle(mask, point1, point2, rectangleColor, 2, cv.LINE_AA, 0);
       let a = 0;
-      let b = 0;
-      console.log(cnt)
-      // for (let cnt_x = pos_x ; cnt_x <= rect.x + rect.width+2; cnt_x++){
-      //   for (let cnt_y = pos_y; cnt_y <= rect.y + rect.height+2; cnt_y++){
-      //        char.ucharPtr(a,b) = mask.ucharPtr(cnt_x, cnt_y); 
-      //        b += 1
-      //   } 
-      //   a += 1
-      // }
-      
-    }
-   cv.imshow('imageCanvas', mask);
+      for (let cnt_x = pos_x ; cnt_x <= rect.x + rect.width+2; cnt_x++){
+        let b = 0;
+        for (let cnt_y = pos_y; cnt_y <= rect.y + rect.height+2; cnt_y++){
+             char.ucharPtr(b,a)[0] = mask.ucharPtr(cnt_y, cnt_x)[0];
+             b += 1;
+        } 
+        a +=  1;
+      }
+      cntr_size.height = 100
+      cntr_size.width = 70
+      cv.resize(char, char,cntr_size)
+      output_array = []
+      a = 0
+      for (let i = 0 ; i < char.rows; i++ ){
+        output_array.push(char.ucharPtr(i))
+      }
+      // let ctx = imgElement.getContext("2d");
+      // let imageData = ctx.createImageData(char.cols, char.rows);
+      // imageData.data.set(new Uint8ClampedArray(char.data, char.cols, char.rows));
 
-    displayMat.delete();
+
+
+
+      console.log(output_array)
+
+      
+      delete pos_x, pos_y, point1, point2;
+    }
+    
+    cv.imshow('imageCanvas', char);
+
+    char.delete(); srcMat.delete(); contours.delete(); hierarchy.delete(); mask.delete(); blackMat.delete(); displayMat.delete();
 
     this.disabled = false;
     document.body.classList.remove('loading');
