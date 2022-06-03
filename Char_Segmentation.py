@@ -70,10 +70,10 @@ def detect_chars(imag, img_name,showSteps=False):
                 y = y-2
                 w = w+2
                 h = h+2
-                if w>5 and h>10 and x > 5 and x < 290 and y > 5 and y < 60 : 
+                if w >7 and w < 50  and  h >7 and x > 5 and x < 290 and y > 5 and y < 60 : 
                         cv2.rectangle(new_mask,(x,y),(x+w,y+h),(0,0,0),3)
                         detected_char_list.append(mask[y:y+h, x:x+w])
-        #cv2.imshow("detected_char",mask)
+       # cv2.imshow("detected_char",mask)
         output(detected_char_list, img_name)  # Take all detected_chars into a folder
         return detected_char_list
 
@@ -87,17 +87,17 @@ def output(detected_char_list, img_name):
         for pic in detected_char_list:  
                 cv2.resize(pic, (70,100))
                 #print(pic)
-                pic_format = "test"+str(i)+".jpg" 
+                pic_format = img_name +"test"+str(i)+".jpg" 
                 cv2.imwrite(os.path.join(path, pic_format), pic)
                 i+=1
 
 def main():
         folder_path = "test" # Change the path with the folder with imgs
         path = os.path.join(Path().absolute(),folder_path) # Directory of current working directory, not __file__ 
-        # img = "plat4.jpg" # Change it for a single testing
-        # detected_char_list = detect_chars(os.path.join(path, img), img, showSteps=False)
+        img = "plat5.jpg" # Change it for a single testing
+        #detected_char_list = detect_chars(os.path.join(path, img), img, showSteps=False)
        
-       # Use this code below for loop all the imgs inside a folder
+       ## Use this code below for loop all the imgs inside a folder
         path_list = os.listdir(path)
         for img in path_list:
                 try:
