@@ -4,9 +4,11 @@ import functools
 from pathlib import Path
 import os
 
-def detect_chars(imag, img_name,showSteps=False):
+def detect_chars(imag, img_name='',showSteps=False):
         image = cv2.imread(imag)
+        # image = np.array(imag, np.uint8)
         image = cv2.resize(image,(300,120) )
+        cv2.imshow("tes", image)
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         gray = 255-gray
         gray = cv2.bilateralFilter(gray, 11, 17, 17) 
@@ -24,8 +26,9 @@ def detect_chars(imag, img_name,showSteps=False):
         mask = np.zeros(thresh.shape, dtype="uint8")
 
         # Set lower bound and upper bound criteria for characters
+        
         total_pixels = image.shape[0] * image.shape[1]
-        lower = total_pixels // 350 # heuristic param, can be fine tuned if necessary
+        lower = total_pixels // 250 # heuristic param, can be fine tuned if necessary
         upper = total_pixels // 4 # heuristic param, can be fine tuned if necessary
         # Loop over the unique components
         for (i, label) in enumerate(np.unique(labels)):
@@ -68,12 +71,13 @@ def detect_chars(imag, img_name,showSteps=False):
                 x,y,w,h = c
                 x = x-2
                 y = y-2
-                w = w+2
-                h = h+2
-                if w >7 and w < 50  and  h >7 and x > 5 and x < 290 and y > 5 and y < 60 : 
+
+                w = w+4
+                h = h+4
+                if w >4 and w < 50  and h < 40 and h >7 and x > 2 and x < 290 and y > 5 and y < 60 : 
                         cv2.rectangle(new_mask,(x,y),(x+w,y+h),(0,0,0),3)
-                        detected_char_list.append(mask[y:y+h, x:x+w])
-       # cv2.imshow("detected_char",mask)
+                        detected_char_list.append(image[y:y+h, x:x+w])
+        #cv2.imshow("detected_char",mask)
         output(detected_char_list, img_name)  # Take all detected_chars into a folder
         return detected_char_list
 
@@ -91,19 +95,30 @@ def output(detected_char_list, img_name):
                 cv2.imwrite(os.path.join(path, pic_format), pic)
                 i+=1
 
+def flip(image, img):
+        path = image
+        image = cv2.imread(image)
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        thresh = cv2.adaptiveThreshold(gray, 255,
+        cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY_INV, 43, 9)
+        cv2.imshow("tes",thresh)
+
+        cv2.imwrite(path, image)
 def main():
         folder_path = "test" # Change the path with the folder with imgs
         path = os.path.join(Path().absolute(),folder_path) # Directory of current working directory, not __file__ 
-        img = "plat5.jpg" # Change it for a single testing
-        #detected_char_list = detect_chars(os.path.join(path, img), img, showSteps=False)
-       
-       ## Use this code below for loop all the imgs inside a folder
+        # img = "plat3.jpeg" # Change it for a single testing
+        # detected_char_list = detect_chars(os.path.join(path, img), img, showSteps=True)
+        
+       # Use this code below for loop all the imgs inside a folder
         path_list = os.listdir(path)
+
         for img in path_list:
-                try:
+                # try:
+                        # flip(os.path.join(path,img),img)
                          mask = detect_chars(os.path.join(path,img), img, showSteps=False)
-                except:
-                        continue
+                # except:
+                #         continue
 
         cv2.waitKey(0)
 if __name__=="__main__":
